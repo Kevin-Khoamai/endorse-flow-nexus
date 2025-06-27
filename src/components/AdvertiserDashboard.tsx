@@ -10,6 +10,7 @@ import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useApplications } from '@/hooks/useApplications';
+import { useVideos } from '@/hooks/useVideos';
 
 interface AdvertiserDashboardProps {
   onBack: () => void;
@@ -19,6 +20,7 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
   const { toast } = useToast();
   const { campaigns, loading, createCampaign } = useCampaigns();
   const { applications } = useApplications();
+  const { videos } = useVideos();
   const [showCreateCampaign, setShowCreateCampaign] = useState(false);
   const [newCampaign, setNewCampaign] = useState({
     title: '',
@@ -32,6 +34,14 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
   // Add state for viewing applications
   const [selectedCampaignForApps, setSelectedCampaignForApps] = useState<any>(null);
   const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
+
+  // Add state for reviewing videos
+  const [selectedCampaignForVideos, setSelectedCampaignForVideos] = useState<any>(null);
+  const [showVideosDialog, setShowVideosDialog] = useState(false);
+
+  // Add state for viewing campaign analytics
+  const [selectedCampaignForAnalytics, setSelectedCampaignForAnalytics] = useState<any>(null);
+  const [showAnalyticsDialog, setShowAnalyticsDialog] = useState(false);
 
   const handleCreateCampaign = async () => {
     if (!newCampaign.title || !newCampaign.brand || !newCampaign.description) {
@@ -198,10 +208,24 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
                       >
                         View Applications
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCampaignForVideos(campaign);
+                          setShowVideosDialog(true);
+                        }}
+                      >
                         Review Videos
                       </Button>
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCampaignForAnalytics(campaign);
+                          setShowAnalyticsDialog(true);
+                        }}
+                      >
                         Campaign Analytics
                       </Button>
                     </div>
@@ -310,6 +334,81 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
                   </div>
                 ))
             )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Videos Dialog */}
+      <Dialog open={showVideosDialog} onOpenChange={setShowVideosDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Videos for {selectedCampaignForVideos?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {videos
+              .filter(video => video.application?.campaign?.title === selectedCampaignForVideos?.title)
+              .length === 0 ? (
+              <p>No videos found for this campaign.</p>
+            ) : (
+              videos
+                .filter(video => video.application?.campaign?.title === selectedCampaignForVideos?.title)
+                .map(video => (
+                  <div key={video.id} className="border p-4 rounded">
+                    <div>
+                      <strong>Publisher:</strong> {video.application?.publisher?.full_name}
+                    </div>
+                    <div>
+                      <strong>Title:</strong> {video.title}
+                    </div>
+                    <div>
+                      <strong>Status:</strong> {video.status}
+                    </div>
+                    <div>
+                      <strong>URL:</strong> <a href={video.url} target="_blank" rel="noopener noreferrer">{video.url}</a>
+                    </div>
+                    <div>
+                      <strong>Description:</strong> {video.description || 'N/A'}
+                    </div>
+                  </div>
+                ))
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Campaign Analytics Dialog */}
+      <Dialog open={showAnalyticsDialog} onOpenChange={setShowAnalyticsDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Analytics for {selectedCampaignForAnalytics?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <strong>Brand:</strong> {selectedCampaignForAnalytics?.brand}
+            </div>
+            <div>
+              <strong>Description:</strong> {selectedCampaignForAnalytics?.description}
+            </div>
+            <div>
+              <strong>Budget:</strong> {selectedCampaignForAnalytics?.budget}
+            </div>
+            <div>
+              <strong>Deadline:</strong> {selectedCampaignForAnalytics?.deadline}
+            </div>
+            <div>
+              <strong>Total Applications:</strong> {
+                applications.filter(app => app.campaign_id === selectedCampaignForAnalytics?.id).length
+              }
+            </div>
+            <div>
+              <strong>Total Videos:</strong> {
+                videos.filter(video => video.application?.campaign?.title === selectedCampaignForAnalytics?.title).length
+              }
+            </div>
           </div>
         </DialogContent>
       </Dialog>
