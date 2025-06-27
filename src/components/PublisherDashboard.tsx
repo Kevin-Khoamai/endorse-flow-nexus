@@ -143,14 +143,19 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {campaigns.map((campaign) => (
-                <CampaignCard
-                  key={campaign.id}
-                  campaign={campaign}
-                  onViewDetails={handleViewDetails}
-                  onApply={handleApply}
-                />
-              ))}
+              {campaigns.map((campaign) => {
+                // Find if publisher already applied and got approval for this campaign
+                const isAppliedAndApproved = applications.some(app => app.campaign_id === campaign.id && app.status === 'sp_approved');
+                return (
+                  <CampaignCard
+                    key={campaign.id}
+                    campaign={campaign}
+                    onViewDetails={handleViewDetails}
+                    onApply={handleApply}
+                    isAppliedAndApproved={isAppliedAndApproved}
+                  />
+                );
+              })}
             </div>
           )}
         </div>
@@ -225,7 +230,11 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
               />
             </div>
             <div className="flex gap-2 pt-4">
-              <Button onClick={handleSubmitApplication}>Submit Application</Button>
+              <Button onClick={handleSubmitApplication} disabled={
+                applications.some(app => app.campaign_id === selectedCampaign?.id && app.status === 'sp_approved')
+              }>
+                Submit Application
+              </Button>
               <Button variant="outline" onClick={() => setShowApplicationDialog(false)}>
                 Cancel
               </Button>

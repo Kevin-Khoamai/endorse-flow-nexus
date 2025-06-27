@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -20,9 +19,10 @@ interface CampaignCardProps {
   onViewDetails?: (campaign: Campaign) => void;
   onApply?: (campaign: Campaign) => void;
   showActions?: boolean;
+  isAppliedAndApproved?: boolean;
 }
 
-const CampaignCard = ({ campaign, onViewDetails, onApply, showActions = true }: CampaignCardProps) => {
+const CampaignCard = ({ campaign, onViewDetails, onApply, showActions = true, isAppliedAndApproved = false }: CampaignCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
@@ -75,7 +75,7 @@ const CampaignCard = ({ campaign, onViewDetails, onApply, showActions = true }: 
               </Button>
             )}
             {onApply && campaign.status === 'active' && (
-              <Button onClick={() => onApply(campaign)}>
+              <Button onClick={() => onApply(campaign)} disabled={isAppliedAndApproved}>
                 Apply Now
               </Button>
             )}
