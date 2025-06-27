@@ -1,33 +1,13 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import Layout from './Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Application {
-  id: string;
-  publisherName: string;
-  campaignTitle: string;
-  experience: string;
-  audience: string;
-  videoIdeas: string;
-  status: 'pending' | 'approved' | 'rejected';
-  submittedAt: string;
-}
-
-interface VideoSubmission {
-  id: string;
-  publisherName: string;
-  campaignTitle: string;
-  videoTitle: string;
-  videoUrl: string;
-  description: string;
-  status: 'pending' | 'approved' | 'rejected';
-  submittedAt: string;
-}
+import { useApplications } from '@/hooks/useApplications';
+import { useVideos } from '@/hooks/useVideos';
 
 interface SPTeamDashboardProps {
   onBack: () => void;
@@ -35,76 +15,72 @@ interface SPTeamDashboardProps {
 
 const SPTeamDashboard = ({ onBack }: SPTeamDashboardProps) => {
   const { toast } = useToast();
-  const [applications, setApplications] = useState<Application[]>([
-    {
-      id: '1',
-      publisherName: 'Sarah Johnson',
-      campaignTitle: 'Summer Fashion Collection',
-      experience: 'I have been creating fashion content for 3 years with consistent engagement...',
-      audience: '15K followers, primarily women aged 18-35 interested in affordable fashion...',
-      videoIdeas: 'Morning to night outfit transitions, styling tips for different body types...',
-      status: 'pending',
-      submittedAt: '2024-06-25'
-    },
-    {
-      id: '2',
-      publisherName: 'Mike Chen',
-      campaignTitle: 'Tech Product Launch',
-      experience: 'Tech reviewer with 5 years experience, specialized in mobile devices...',
-      audience: '32K subscribers on YouTube, tech enthusiasts and early adopters...',
-      videoIdeas: 'Unboxing, detailed feature walkthrough, comparison with competitors...',
-      status: 'pending',
-      submittedAt: '2024-06-24'
-    }
-  ]);
+  const { applications, loading: applicationsLoading, updateApplicationStatus } = useApplications();
+  const { videos, loading: videosLoading, updateVideoStatus } = useVideos();
 
-  const [videoSubmissions, setVideoSubmissions] = useState<VideoSubmission[]>([
-    {
-      id: '1',
-      publisherName: 'Emma Wilson',
-      campaignTitle: 'Fitness App Promotion',
-      videoTitle: 'My 30-Day Fitness Journey with FitLife',
-      videoUrl: 'https://youtube.com/watch?v=example1',
-      description: 'Documented my complete workout journey using the FitLife app...',
-      status: 'pending',
-      submittedAt: '2024-06-23'
-    }
-  ]);
+  const pendingApplications = applications.filter(app => app.status === 'pending');
+  const pendingVideos = videos.filter(video => video.status === 'pending');
 
-  const handleApplicationDecision = (applicationId: string, decision: 'approved' | 'rejected') => {
-    setApplications(apps => 
-      apps.map(app => 
-        app.id === applicationId ? { ...app, status: decision } : app
-      )
-    );
+  const handleApplicationDecision = async (applicationId: string, decision: 'sp_approved' | 'sp_rejected') => {
+    const { error } = await updateApplicationStatus(applicationId, decision);
     
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update application status. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     toast({
-      title: decision === 'approved' ? "Application Approved" : "Application Rejected",
-      description: `The application has been ${decision}.`,
+      title: decision === 'sp_approved' ? "Application Approved" : "Application Rejected",
+      description: `The application has been ${decision.replace('sp_', '')}.`,
     });
   };
 
-  const handleVideoDecision = (videoId: string, decision: 'approved' | 'rejected') => {
-    setVideoSubmissions(videos => 
-      videos.map(video => 
-        video.id === videoId ? { ...video, status: decision } : video
-      )
-    );
+  const handleVideoDecision = async (videoId: string, decision: 'sp_approved' | 'sp_rejected') => {
+    const { error } = await updateVideoStatus(videoId, decision);
     
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update video status. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     toast({
-      title: decision === 'approved' ? "Video Approved" : "Video Rejected",
-      description: `The video has been ${decision}.`,
+      title: decision === 'sp_approved' ? "Video Approved" : "Video Rejected",
+      description: `The video has been ${decision.replace('sp_', '')} and forwarded to advertiser.`,
     });
   };
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      default: return 'bg-gray-100 text-gray-800';
+      case 'sp_approved':
+      case 'advertiser_approved': 
+        return 'bg-green-100 text-green-800';
+      case 'sp_rejected':
+      case 'advertiser_rejected':
+        return 'bg-red-100 text-red-800';
+      case 'pending': 
+        return 'bg-yellow-100 text-yellow-800';
+      default: 
+        return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (applicationsLoading || videosLoading) {
+    return (
+      <Layout title="SP Team Dashboard" onBack={onBack}>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout title="SP Team Dashboard" onBack={onBack}>
@@ -113,38 +89,39 @@ const SPTeamDashboard = ({ onBack }: SPTeamDashboardProps) => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Pending Applications</h2>
           <div className="space-y-4">
-            {applications.map((application) => (
-              <Card key={application.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{application.publisherName}</CardTitle>
-                      <p className="text-sm text-gray-600 mt-1">{application.campaignTitle}</p>
+            {pendingApplications.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-gray-600">No pending applications at the moment.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              pendingApplications.map((application) => (
+                <Card key={application.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-lg">{application.publisher?.full_name || 'Publisher'}</CardTitle>
+                        <p className="text-sm text-gray-600 mt-1">{application.campaign?.title}</p>
+                        <p className="text-sm text-gray-500">{application.campaign?.brand}</p>
+                      </div>
+                      <Badge className={getStatusColor(application.status)}>
+                        {application.status.replace('_', ' ')}
+                      </Badge>
                     </div>
-                    <Badge className={getStatusColor(application.status)}>
-                      {application.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium text-sm mb-1">Experience</h4>
-                      <p className="text-sm text-gray-600">{application.experience}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-sm mb-1">Audience</h4>
-                      <p className="text-sm text-gray-600">{application.audience}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-sm mb-1">Video Ideas</h4>
-                      <p className="text-sm text-gray-600">{application.videoIdeas}</p>
-                    </div>
-                    {application.status === 'pending' && (
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {application.message && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Application Details</h4>
+                          <p className="text-sm text-gray-600 whitespace-pre-wrap">{application.message}</p>
+                        </div>
+                      )}
                       <div className="flex gap-2 pt-2">
                         <Button 
                           size="sm" 
-                          onClick={() => handleApplicationDecision(application.id, 'approved')}
+                          onClick={() => handleApplicationDecision(application.id, 'sp_approved')}
                           className="bg-green-600 hover:bg-green-700"
                         >
                           <Check className="w-4 h-4 mr-1" />
@@ -153,17 +130,17 @@ const SPTeamDashboard = ({ onBack }: SPTeamDashboardProps) => {
                         <Button 
                           size="sm" 
                           variant="destructive"
-                          onClick={() => handleApplicationDecision(application.id, 'rejected')}
+                          onClick={() => handleApplicationDecision(application.id, 'sp_rejected')}
                         >
                           <X className="w-4 h-4 mr-1" />
                           Reject
                         </Button>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </div>
 
@@ -171,45 +148,54 @@ const SPTeamDashboard = ({ onBack }: SPTeamDashboardProps) => {
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Video Submissions</h2>
           <div className="space-y-4">
-            {videoSubmissions.map((video) => (
-              <Card key={video.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{video.publisherName}</CardTitle>
-                      <p className="text-sm text-gray-600 mt-1">{video.campaignTitle}</p>
+            {pendingVideos.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-gray-600">No pending video submissions at the moment.</p>
+                </CardContent>
+              </Card>
+            ) : (
+              pendingVideos.map((video) => (
+                <Card key={video.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-lg">{video.application?.publisher?.full_name || 'Publisher'}</CardTitle>
+                        <p className="text-sm text-gray-600 mt-1">{video.application?.campaign?.title}</p>
+                        <p className="text-sm text-gray-500">{video.application?.campaign?.brand}</p>
+                      </div>
+                      <Badge className={getStatusColor(video.status)}>
+                        {video.status.replace('_', ' ')}
+                      </Badge>
                     </div>
-                    <Badge className={getStatusColor(video.status)}>
-                      {video.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium text-sm mb-1">Video Title</h4>
-                      <p className="text-sm text-gray-600">{video.videoTitle}</p>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-sm mb-1">Video URL</h4>
-                      <a 
-                        href={video.videoUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-sm text-blue-600 hover:underline"
-                      >
-                        {video.videoUrl}
-                      </a>
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-sm mb-1">Description</h4>
-                      <p className="text-sm text-gray-600">{video.description}</p>
-                    </div>
-                    {video.status === 'pending' && (
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Video Title</h4>
+                        <p className="text-sm text-gray-600">{video.title}</p>
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-sm mb-1">Video URL</h4>
+                        <a 
+                          href={video.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-sm text-blue-600 hover:underline"
+                        >
+                          {video.url}
+                        </a>
+                      </div>
+                      {video.description && (
+                        <div>
+                          <h4 className="font-medium text-sm mb-1">Description</h4>
+                          <p className="text-sm text-gray-600">{video.description}</p>
+                        </div>
+                      )}
                       <div className="flex gap-2 pt-2">
                         <Button 
                           size="sm" 
-                          onClick={() => handleVideoDecision(video.id, 'approved')}
+                          onClick={() => handleVideoDecision(video.id, 'sp_approved')}
                           className="bg-green-600 hover:bg-green-700"
                         >
                           <Check className="w-4 h-4 mr-1" />
@@ -218,17 +204,17 @@ const SPTeamDashboard = ({ onBack }: SPTeamDashboardProps) => {
                         <Button 
                           size="sm" 
                           variant="destructive"
-                          onClick={() => handleVideoDecision(video.id, 'rejected')}
+                          onClick={() => handleVideoDecision(video.id, 'sp_rejected')}
                         >
                           <X className="w-4 h-4 mr-1" />
                           Reject
                         </Button>
                       </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </div>

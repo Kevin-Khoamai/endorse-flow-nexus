@@ -6,8 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaigns, Campaign } from '@/hooks/useCampaigns';
+import { useApplications } from '@/hooks/useApplications';
+import { useVideos } from '@/hooks/useVideos';
 
 interface PublisherDashboardProps {
   onBack: () => void;
@@ -16,9 +19,12 @@ interface PublisherDashboardProps {
 const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
   const { toast } = useToast();
   const { campaigns, loading } = useCampaigns();
+  const { applications, createApplication } = useApplications();
+  const { createVideo } = useVideos();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [showApplicationDialog, setShowApplicationDialog] = useState(false);
   const [showVideoUploadDialog, setShowVideoUploadDialog] = useState(false);
+  const [selectedApplicationId, setSelectedApplicationId] = useState<string>('');
   const [applicationData, setApplicationData] = useState({
     experience: '',
     audience: '',
@@ -30,6 +36,9 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     description: ''
   });
 
+  // Get approved applications for video upload
+  const approvedApplications = applications.filter(app => app.status === 'sp_approved');
+
   const handleViewDetails = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
   };
@@ -39,26 +48,73 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     setShowApplicationDialog(true);
   };
 
-  const handleSubmitApplication = () => {
+  const handleSubmitApplication = async () => {
+    if (!selectedCampaign) return;
+
+    const { error } = await createApplication({
+      campaign_id: selectedCampaign.id,
+      experience: applicationData.experience,
+      audience: applicationData.audience,
+      videoIdeas: applicationData.videoIdeas
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to submit application. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     toast({
       title: "Application Submitted",
       description: "Your application has been sent for SP Team review.",
     });
+    
     setShowApplicationDialog(false);
     setApplicationData({ experience: '', audience: '', videoIdeas: '' });
+    setSelectedCampaign(null);
   };
 
   const handleUploadVideo = () => {
     setShowVideoUploadDialog(true);
   };
 
-  const handleSubmitVideo = () => {
+  const handleSubmitVideo = async () => {
+    if (!selectedApplicationId || !videoData.title || !videoData.url) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { error } = await createVideo({
+      application_id: selectedApplicationId,
+      title: videoData.title,
+      url: videoData.url,
+      description: videoData.description
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to upload video. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     toast({
       title: "Video Submitted",
-      description: "Your video has been uploaded and sent for approval.",
+      description: "Your video has been uploaded and sent for SP Team approval.",
     });
+    
     setShowVideoUploadDialog(false);
     setVideoData({ title: '', url: '', description: '' });
+    setSelectedApplicationId('');
   };
 
   if (loading) {
@@ -76,9 +132,11 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
       title="Publisher Dashboard" 
       onBack={onBack}
       headerAction={
-        <Button onClick={handleUploadVideo} variant="outline">
-          Upload Video
-        </Button>
+        approvedApplications.length > 0 ? (
+          <Button onClick={handleUploadVideo} variant="outline">
+            Upload Video
+          </Button>
+        ) : null
       }
     >
       <div className="space-y-8">
@@ -189,6 +247,21 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
             <DialogTitle>Upload Video</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">Select Campaign</label>
+              <Select value={selectedApplicationId} onValueChange={setSelectedApplicationId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choose an approved campaign..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {approvedApplications.map((app) => (
+                    <SelectItem key={app.id} value={app.id}>
+                      {app.campaign?.title} - {app.campaign?.brand}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
             <div>
               <label className="block text-sm font-medium mb-2">Video Title</label>
               <Input
