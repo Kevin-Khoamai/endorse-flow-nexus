@@ -130,17 +130,16 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     <Layout 
       title="Publisher Dashboard" 
       onBack={onBack}
-      headerAction={
-        approvedApplications.length > 0 ? (
-          <div className="flex justify-center">
+    >
+      <div className="space-y-8">
+        {/* Centered Upload Video button */}
+        {approvedApplications.length > 0 && (
+          <div className="flex justify-center mb-6">
             <Button onClick={handleUploadVideo} variant="outline">
               Upload Video
             </Button>
           </div>
-        ) : null
-      }
-    >
-      <div className="space-y-8">
+        )}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Campaigns</h2>
           {campaigns.length === 0 ? (
