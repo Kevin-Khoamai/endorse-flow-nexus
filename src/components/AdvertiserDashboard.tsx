@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from './Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaigns } from '@/hooks/useCampaigns';
+import { useApplications } from '@/hooks/useApplications';
 
 interface AdvertiserDashboardProps {
   onBack: () => void;
@@ -18,6 +18,7 @@ interface AdvertiserDashboardProps {
 const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
   const { toast } = useToast();
   const { campaigns, loading, createCampaign } = useCampaigns();
+  const { applications } = useApplications();
   const [showCreateCampaign, setShowCreateCampaign] = useState(false);
   const [newCampaign, setNewCampaign] = useState({
     title: '',
@@ -27,6 +28,10 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
     description: '',
     requirements: ''
   });
+
+  // Add state for viewing applications
+  const [selectedCampaignForApps, setSelectedCampaignForApps] = useState<any>(null);
+  const [showApplicationsDialog, setShowApplicationsDialog] = useState(false);
 
   const handleCreateCampaign = async () => {
     if (!newCampaign.title || !newCampaign.brand || !newCampaign.description) {
@@ -183,7 +188,14 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
                       </div>
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedCampaignForApps(campaign);
+                          setShowApplicationsDialog(true);
+                        }}
+                      >
                         View Applications
                       </Button>
                       <Button variant="outline" size="sm">
@@ -264,6 +276,40 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
                 Cancel
               </Button>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Applications Dialog */}
+      <Dialog open={showApplicationsDialog} onOpenChange={setShowApplicationsDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              Applications for {selectedCampaignForApps?.title}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {applications
+              .filter(app => app.campaign_id === selectedCampaignForApps?.id)
+              .length === 0 ? (
+              <p>No applications found for this campaign.</p>
+            ) : (
+              applications
+                .filter(app => app.campaign_id === selectedCampaignForApps?.id)
+                .map(app => (
+                  <div key={app.id} className="border p-4 rounded">
+                    <div>
+                      <strong>Publisher:</strong> {app.publisher?.full_name || app.publisher_id}
+                    </div>
+                    <div>
+                      <strong>Status:</strong> {app.status}
+                    </div>
+                    <div>
+                      <strong>Message:</strong> {app.message || 'N/A'}
+                    </div>
+                  </div>
+                ))
+            )}
           </div>
         </DialogContent>
       </Dialog>
