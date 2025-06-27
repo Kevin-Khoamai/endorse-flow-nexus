@@ -1,14 +1,34 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import React, { useState } from 'react';
+import RoleSelection from '@/components/RoleSelection';
+import PublisherDashboard from '@/components/PublisherDashboard';
+import SPTeamDashboard from '@/components/SPTeamDashboard';
+import AdvertiserDashboard from '@/components/AdvertiserDashboard';
 
 const Index = () => {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
-  );
+  const [selectedRole, setSelectedRole] = useState<string | null>(null);
+
+  const handleRoleSelect = (role: string) => {
+    setSelectedRole(role);
+  };
+
+  const handleBack = () => {
+    setSelectedRole(null);
+  };
+
+  if (selectedRole === 'publisher') {
+    return <PublisherDashboard onBack={handleBack} />;
+  }
+
+  if (selectedRole === 'sp-team') {
+    return <SPTeamDashboard onBack={handleBack} />;
+  }
+
+  if (selectedRole === 'advertiser') {
+    return <AdvertiserDashboard onBack={handleBack} />;
+  }
+
+  return <RoleSelection onRoleSelect={handleRoleSelect} />;
 };
 
 export default Index;
