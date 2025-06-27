@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import Layout from './Layout';
 import CampaignCard from './CampaignCard';
@@ -133,9 +132,11 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
       onBack={onBack}
       headerAction={
         approvedApplications.length > 0 ? (
-          <Button onClick={handleUploadVideo} variant="outline">
-            Upload Video
-          </Button>
+          <div className="flex justify-center">
+            <Button onClick={handleUploadVideo} variant="outline">
+              Upload Video
+            </Button>
+          </div>
         ) : null
       }
     >
