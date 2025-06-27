@@ -280,7 +280,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
                 onChange={(e) => setVideoData({...videoData, description: e.target.value})}
               />
             </div>
-            <div className="flex gap-2 pt-4">
+            <div className="flex justify-center mb-6" >
               <Button onClick={handleSubmitVideo}>Upload Video</Button>
               <Button variant="outline" onClick={() => setShowVideoUploadDialog(false)}>
                 Cancel
