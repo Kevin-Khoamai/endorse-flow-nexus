@@ -7,21 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Check, X, Plus } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface Campaign {
-  id: string;
-  title: string;
-  brand: string;
-  budget: string;
-  deadline: string;
-  requirements: string[];
-  status: 'active' | 'pending' | 'completed';
-  description: string;
-  applicants: number;
-  videos: number;
-}
+import { useCampaigns } from '@/hooks/useCampaigns';
 
 interface AdvertiserDashboardProps {
   onBack: () => void;
@@ -29,34 +17,8 @@ interface AdvertiserDashboardProps {
 
 const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
   const { toast } = useToast();
+  const { campaigns, loading, createCampaign } = useCampaigns();
   const [showCreateCampaign, setShowCreateCampaign] = useState(false);
-  const [campaigns, setCampaigns] = useState<Campaign[]>([
-    {
-      id: '1',
-      title: 'Summer Fashion Collection',
-      brand: 'TrendyWear',
-      budget: '$500-$1,500',
-      deadline: '2024-07-15',
-      requirements: ['Fashion', '10K+ followers', 'Video content'],
-      status: 'active',
-      description: 'Promote our latest summer collection with authentic styling videos',
-      applicants: 8,
-      videos: 3
-    },
-    {
-      id: '2',
-      title: 'Tech Product Launch',
-      brand: 'InnovateTech',
-      budget: '$1,000-$3,000',
-      deadline: '2024-07-30',
-      requirements: ['Technology', '25K+ followers', 'Product reviews'],
-      status: 'active',
-      description: 'Create engaging reviews for our new smartphone launch',
-      applicants: 12,
-      videos: 1
-    }
-  ]);
-
   const [newCampaign, setNewCampaign] = useState({
     title: '',
     brand: '',
@@ -66,21 +28,35 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
     requirements: ''
   });
 
-  const handleCreateCampaign = () => {
-    const campaign: Campaign = {
-      id: Date.now().toString(),
+  const handleCreateCampaign = async () => {
+    if (!newCampaign.title || !newCampaign.brand || !newCampaign.description) {
+      toast({
+        title: "Missing Information",
+        description: "Please fill in all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { error } = await createCampaign({
       title: newCampaign.title,
       brand: newCampaign.brand,
       budget: newCampaign.budget,
       deadline: newCampaign.deadline,
       description: newCampaign.description,
-      requirements: newCampaign.requirements.split(',').map(req => req.trim()),
-      status: 'active',
-      applicants: 0,
-      videos: 0
-    };
+      requirements: newCampaign.requirements.split(',').map(req => req.trim()).filter(req => req),
+      status: 'active'
+    });
 
-    setCampaigns([...campaigns, campaign]);
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create campaign. Please try again.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setShowCreateCampaign(false);
     setNewCampaign({
       title: '',
@@ -100,11 +76,21 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'paused': return 'bg-yellow-100 text-yellow-800';
       case 'completed': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  if (loading) {
+    return (
+      <Layout title="Advertiser Dashboard" onBack={onBack}>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout 
@@ -123,31 +109,27 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
           <Card>
             <CardContent className="p-6">
               <div className="text-2xl font-bold text-blue-600">{campaigns.length}</div>
-              <p className="text-sm text-gray-600">Active Campaigns</p>
+              <p className="text-sm text-gray-600">Total Campaigns</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
               <div className="text-2xl font-bold text-green-600">
-                {campaigns.reduce((sum, c) => sum + c.applicants, 0)}
+                {campaigns.filter(c => c.status === 'active').length}
               </div>
-              <p className="text-sm text-gray-600">Total Applicants</p>
+              <p className="text-sm text-gray-600">Active Campaigns</p>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
-              <div className="text-2xl font-bold text-purple-600">
-                {campaigns.reduce((sum, c) => sum + c.videos, 0)}
-              </div>
+              <div className="text-2xl font-bold text-purple-600">0</div>
+              <p className="text-sm text-gray-600">Total Applications</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-6">
+              <div className="text-2xl font-bold text-orange-600">0</div>
               <p className="text-sm text-gray-600">Videos Submitted</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold text-orange-600">
-                {campaigns.filter(c => c.status === 'completed').length}
-              </div>
-              <p className="text-sm text-gray-600">Completed</p>
             </CardContent>
           </Card>
         </div>
@@ -155,55 +137,67 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
         {/* Campaigns List */}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Campaigns</h2>
-          <div className="space-y-4">
-            {campaigns.map((campaign) => (
-              <Card key={campaign.id}>
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="text-lg">{campaign.title}</CardTitle>
-                      <p className="text-sm text-gray-600 mt-1">{campaign.brand}</p>
+          {campaigns.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <p className="text-gray-600 mb-4">No campaigns created yet.</p>
+                <Button onClick={() => setShowCreateCampaign(true)}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Campaign
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {campaigns.map((campaign) => (
+                <Card key={campaign.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-lg">{campaign.title}</CardTitle>
+                        <p className="text-sm text-gray-600 mt-1">{campaign.brand}</p>
+                      </div>
+                      <Badge className={getStatusColor(campaign.status)}>
+                        {campaign.status}
+                      </Badge>
                     </div>
-                    <Badge className={getStatusColor(campaign.status)}>
-                      {campaign.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-700 mb-4">{campaign.description}</p>
-                  <div className="grid md:grid-cols-4 gap-4 mb-4">
-                    <div>
-                      <span className="text-sm text-gray-600">Budget:</span>
-                      <p className="font-medium">{campaign.budget}</p>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-700 mb-4">{campaign.description}</p>
+                    <div className="grid md:grid-cols-4 gap-4 mb-4">
+                      <div>
+                        <span className="text-sm text-gray-600">Budget:</span>
+                        <p className="font-medium">{campaign.budget || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Deadline:</span>
+                        <p className="font-medium">{campaign.deadline || 'Not specified'}</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Applications:</span>
+                        <p className="font-medium">0</p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-600">Videos:</span>
+                        <p className="font-medium">0</p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Deadline:</span>
-                      <p className="font-medium">{campaign.deadline}</p>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm">
+                        View Applications
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        Review Videos
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        Campaign Analytics
+                      </Button>
                     </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Applicants:</span>
-                      <p className="font-medium">{campaign.applicants}</p>
-                    </div>
-                    <div>
-                      <span className="text-sm text-gray-600">Videos:</span>
-                      <p className="font-medium">{campaign.videos}</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">
-                      View Applications
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      Review Videos
-                    </Button>
-                    <Button variant="outline" size="sm">
-                      Campaign Analytics
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -215,7 +209,7 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium mb-2">Campaign Title</label>
+              <label className="block text-sm font-medium mb-2">Campaign Title *</label>
               <Input
                 placeholder="Enter campaign title..."
                 value={newCampaign.title}
@@ -223,7 +217,7 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
               />
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Brand Name</label>
+              <label className="block text-sm font-medium mb-2">Brand Name *</label>
               <Input
                 placeholder="Enter brand name..."
                 value={newCampaign.brand}
@@ -249,7 +243,7 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
+              <label className="block text-sm font-medium mb-2">Description *</label>
               <Textarea
                 placeholder="Describe your campaign goals and expectations..."
                 value={newCampaign.description}

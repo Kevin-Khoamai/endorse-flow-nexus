@@ -7,17 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/hooks/use-toast';
-
-interface Campaign {
-  id: string;
-  title: string;
-  brand: string;
-  budget: string;
-  deadline: string;
-  requirements: string[];
-  status: 'active' | 'pending' | 'completed';
-  description: string;
-}
+import { useCampaigns, Campaign } from '@/hooks/useCampaigns';
 
 interface PublisherDashboardProps {
   onBack: () => void;
@@ -25,6 +15,7 @@ interface PublisherDashboardProps {
 
 const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
   const { toast } = useToast();
+  const { campaigns, loading } = useCampaigns();
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [showApplicationDialog, setShowApplicationDialog] = useState(false);
   const [showVideoUploadDialog, setShowVideoUploadDialog] = useState(false);
@@ -38,39 +29,6 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     url: '',
     description: ''
   });
-
-  const campaigns: Campaign[] = [
-    {
-      id: '1',
-      title: 'Summer Fashion Collection',
-      brand: 'TrendyWear',
-      budget: '$500-$1,500',
-      deadline: '2024-07-15',
-      requirements: ['Fashion', '10K+ followers', 'Video content'],
-      status: 'active',
-      description: 'Promote our latest summer collection with authentic styling videos'
-    },
-    {
-      id: '2',
-      title: 'Tech Product Launch',
-      brand: 'InnovateTech',
-      budget: '$1,000-$3,000',
-      deadline: '2024-07-30',
-      requirements: ['Technology', '25K+ followers', 'Product reviews'],
-      status: 'active',
-      description: 'Create engaging reviews for our new smartphone launch'
-    },
-    {
-      id: '3',
-      title: 'Fitness App Promotion',
-      brand: 'FitLife',
-      budget: '$300-$800',
-      deadline: '2024-07-20',
-      requirements: ['Fitness', '5K+ followers', 'App tutorials'],
-      status: 'pending',
-      description: 'Show how our fitness app helps achieve workout goals'
-    }
-  ];
 
   const handleViewDetails = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
@@ -103,6 +61,16 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     setVideoData({ title: '', url: '', description: '' });
   };
 
+  if (loading) {
+    return (
+      <Layout title="Publisher Dashboard" onBack={onBack}>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout 
       title="Publisher Dashboard" 
@@ -116,16 +84,23 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
       <div className="space-y-8">
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Campaigns</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {campaigns.map((campaign) => (
-              <CampaignCard
-                key={campaign.id}
-                campaign={campaign}
-                onViewDetails={handleViewDetails}
-                onApply={handleApply}
-              />
-            ))}
-          </div>
+          {campaigns.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-600 mb-4">No active campaigns available at the moment.</p>
+              <p className="text-sm text-gray-500">Check back later for new opportunities!</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {campaigns.map((campaign) => (
+                <CampaignCard
+                  key={campaign.id}
+                  campaign={campaign}
+                  onViewDetails={handleViewDetails}
+                  onApply={handleApply}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -147,11 +122,11 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
               </div>
               <div>
                 <h4 className="font-medium mb-2">Budget Range</h4>
-                <p className="text-gray-600">{selectedCampaign.budget}</p>
+                <p className="text-gray-600">{selectedCampaign.budget || 'Not specified'}</p>
               </div>
               <div>
                 <h4 className="font-medium mb-2">Deadline</h4>
-                <p className="text-gray-600">{selectedCampaign.deadline}</p>
+                <p className="text-gray-600">{selectedCampaign.deadline || 'Not specified'}</p>
               </div>
               <div className="flex gap-2 pt-4">
                 <Button onClick={() => handleApply(selectedCampaign)}>

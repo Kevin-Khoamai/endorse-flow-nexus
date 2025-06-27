@@ -9,7 +9,221 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      campaign_applications: {
+        Row: {
+          advertiser_reviewed_at: string | null
+          advertiser_reviewed_by: string | null
+          campaign_id: string
+          created_at: string
+          id: string
+          message: string | null
+          publisher_id: string
+          sp_reviewed_at: string | null
+          sp_reviewed_by: string | null
+          status: Database["public"]["Enums"]["application_status"]
+          updated_at: string
+        }
+        Insert: {
+          advertiser_reviewed_at?: string | null
+          advertiser_reviewed_by?: string | null
+          campaign_id: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          publisher_id: string
+          sp_reviewed_at?: string | null
+          sp_reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Update: {
+          advertiser_reviewed_at?: string | null
+          advertiser_reviewed_by?: string | null
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          message?: string | null
+          publisher_id?: string
+          sp_reviewed_at?: string | null
+          sp_reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["application_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_applications_advertiser_reviewed_by_fkey"
+            columns: ["advertiser_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_applications_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_applications_publisher_id_fkey"
+            columns: ["publisher_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "campaign_applications_sp_reviewed_by_fkey"
+            columns: ["sp_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          brand: string
+          budget: string
+          created_at: string
+          created_by: string
+          deadline: string
+          description: string
+          id: string
+          requirements: string[] | null
+          status: Database["public"]["Enums"]["campaign_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          brand: string
+          budget: string
+          created_at?: string
+          created_by: string
+          deadline: string
+          description: string
+          id?: string
+          requirements?: string[] | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          budget?: string
+          created_at?: string
+          created_by?: string
+          deadline?: string
+          description?: string
+          id?: string
+          requirements?: string[] | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      videos: {
+        Row: {
+          advertiser_reviewed_at: string | null
+          advertiser_reviewed_by: string | null
+          application_id: string
+          description: string | null
+          id: string
+          sp_reviewed_at: string | null
+          sp_reviewed_by: string | null
+          status: Database["public"]["Enums"]["video_status"]
+          title: string
+          uploaded_at: string
+          url: string
+        }
+        Insert: {
+          advertiser_reviewed_at?: string | null
+          advertiser_reviewed_by?: string | null
+          application_id: string
+          description?: string | null
+          id?: string
+          sp_reviewed_at?: string | null
+          sp_reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["video_status"]
+          title: string
+          uploaded_at?: string
+          url: string
+        }
+        Update: {
+          advertiser_reviewed_at?: string | null
+          advertiser_reviewed_by?: string | null
+          application_id?: string
+          description?: string | null
+          id?: string
+          sp_reviewed_at?: string | null
+          sp_reviewed_by?: string | null
+          status?: Database["public"]["Enums"]["video_status"]
+          title?: string
+          uploaded_at?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_advertiser_reviewed_by_fkey"
+            columns: ["advertiser_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_sp_reviewed_by_fkey"
+            columns: ["sp_reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +232,19 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      application_status:
+        | "pending"
+        | "sp_approved"
+        | "sp_rejected"
+        | "advertiser_approved"
+        | "advertiser_rejected"
+      campaign_status: "draft" | "active" | "paused" | "completed"
+      video_status:
+        | "pending"
+        | "sp_approved"
+        | "sp_rejected"
+        | "advertiser_approved"
+        | "advertiser_rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +359,22 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      application_status: [
+        "pending",
+        "sp_approved",
+        "sp_rejected",
+        "advertiser_approved",
+        "advertiser_rejected",
+      ],
+      campaign_status: ["draft", "active", "paused", "completed"],
+      video_status: [
+        "pending",
+        "sp_approved",
+        "sp_rejected",
+        "advertiser_approved",
+        "advertiser_rejected",
+      ],
+    },
   },
 } as const
