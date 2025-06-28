@@ -85,8 +85,7 @@ const SPTeamDashboard = ({ onBack }: SPTeamDashboardProps) => {
   return (
     <Layout title="SP Team Dashboard" onBack={onBack}>
       <div className="space-y-8">
-        {/* Transaction Status Overview */}
-        <SPTransactionStatusList />
+       
 
         {/* Applications Section */}
         <div>
@@ -220,6 +219,8 @@ const SPTeamDashboard = ({ onBack }: SPTeamDashboardProps) => {
             )}
           </div>
         </div>
+         {/* Transaction Status Overview */}
+         <SPTransactionStatusList />
       </div>
     </Layout>
   );
