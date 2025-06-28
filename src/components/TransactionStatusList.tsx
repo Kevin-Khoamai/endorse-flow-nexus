@@ -95,6 +95,7 @@ const TransactionStatusList = () => {
                   <TableRow>
                     <TableHead>Video Title</TableHead>
                     <TableHead>Campaign</TableHead>
+                    <TableHead>Video URL</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Upload Date</TableHead>
                   </TableRow>
@@ -105,6 +106,16 @@ const TransactionStatusList = () => {
                       <TableCell className="font-medium">{video.title}</TableCell>
                       <TableCell>
                         {video.application?.campaign?.title || 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <a 
+                          href={video.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-blue-600 hover:underline text-sm max-w-xs truncate block"
+                        >
+                          {video.url}
+                        </a>
                       </TableCell>
                       <TableCell>
                         <Badge className={getStatusBadgeColor(video.status)}>
