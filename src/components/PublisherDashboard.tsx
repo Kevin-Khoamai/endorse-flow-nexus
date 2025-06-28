@@ -134,7 +134,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
       onBack={onBack}
       headerAction={
         approvedApplications.length > 0 && (
-          <div className="w-full justify-center mb-6 ">
+          <div className="w-full justify-center mb-6 flex items-center">
         <Button onClick={handleUploadVideo} variant="outline">
           Upload Video
         </Button>
