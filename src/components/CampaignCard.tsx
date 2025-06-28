@@ -1,18 +1,9 @@
+
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-
-interface Campaign {
-  id: string;
-  title: string;
-  brand: string;
-  budget: string;
-  deadline: string;
-  requirements: string[];
-  status: 'active' | 'pending' | 'completed';
-  description: string;
-}
+import { Campaign } from '@/hooks/useCampaigns';
 
 interface CampaignCardProps {
   campaign: Campaign;
@@ -26,7 +17,8 @@ const CampaignCard = ({ campaign, onViewDetails, onApply, showActions = true, is
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'active': return 'bg-green-100 text-green-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'draft': return 'bg-yellow-100 text-yellow-800';
+      case 'paused': return 'bg-orange-100 text-orange-800';
       case 'completed': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
