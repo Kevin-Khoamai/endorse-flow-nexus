@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Layout from './Layout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +7,7 @@ import { Check, X } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useApplications } from '@/hooks/useApplications';
 import { useVideos } from '@/hooks/useVideos';
+import SPTransactionStatusList from './SPTransactionStatusList';
 
 interface SPTeamDashboardProps {
   onBack: () => void;
@@ -85,6 +85,9 @@ const SPTeamDashboard = ({ onBack }: SPTeamDashboardProps) => {
   return (
     <Layout title="SP Team Dashboard" onBack={onBack}>
       <div className="space-y-8">
+        {/* Transaction Status Overview */}
+        <SPTransactionStatusList />
+
         {/* Applications Section */}
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Pending Applications</h2>
