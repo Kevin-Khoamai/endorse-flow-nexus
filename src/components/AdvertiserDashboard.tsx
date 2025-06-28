@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import Layout from './Layout';
+import AdvertiserApprovalList from './AdvertiserApprovalList';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Plus, CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { useApplications } from '@/hooks/useApplications';
@@ -97,6 +99,12 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
     }
   };
 
+  // Get counts for dashboard stats
+  const spApprovedApplications = applications.filter(app => app.status === 'sp_approved');
+  const spApprovedVideos = videos.filter(video => video.status === 'sp_approved');
+  const totalApplications = applications.length;
+  const totalVideos = videos.length;
+
   if (loading) {
     return (
       <Layout title="Advertiser Dashboard" onBack={onBack}>
@@ -120,124 +128,150 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
         </div>
       }
     >
-      <div className="space-y-8">
-        {/* Campaign Overview */}
-        <div className="grid md:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold text-blue-600">{campaigns.length}</div>
-              <p className="text-sm text-gray-600">Total Campaigns</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold text-green-600">
-                {campaigns.filter(c => c.status === 'active').length}
-              </div>
-              <p className="text-sm text-gray-600">Active Campaigns</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold text-purple-600">0</div>
-              <p className="text-sm text-gray-600">Total Applications</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-6">
-              <div className="text-2xl font-bold text-orange-600">0</div>
-              <p className="text-sm text-gray-600">Videos Submitted</p>
-            </CardContent>
-          </Card>
-        </div>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="overview">Campaign Overview</TabsTrigger>
+          <TabsTrigger value="approvals" className="flex items-center gap-2">
+            <CheckCircle className="w-4 h-4" />
+            Approvals
+            {(spApprovedApplications.length + spApprovedVideos.length) > 0 && (
+              <Badge variant="destructive" className="ml-1">
+                {spApprovedApplications.length + spApprovedVideos.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="campaigns">My Campaigns</TabsTrigger>
+        </TabsList>
 
-        {/* Campaigns List */}
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Campaigns</h2>
-          {campaigns.length === 0 ? (
+        <TabsContent value="overview" className="space-y-8">
+          {/* Campaign Overview */}
+          <div className="grid md:grid-cols-4 gap-4">
             <Card>
-              <CardContent className="p-8 text-center">
-                <p className="text-gray-600 mb-4">No campaigns created yet.</p>
-                <Button onClick={() => setShowCreateCampaign(true)}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Campaign
-                </Button>
+              <CardContent className="p-6">
+                <div className="text-2xl font-bold text-blue-600">{campaigns.length}</div>
+                <p className="text-sm text-gray-600">Total Campaigns</p>
               </CardContent>
             </Card>
-          ) : (
-            <div className="space-y-4">
-              {campaigns.map((campaign) => (
-                <Card key={campaign.id}>
-                  <CardHeader>
-                    <div className="flex items-start justify-between">
-                      <div>
-                        <CardTitle className="text-lg">{campaign.title}</CardTitle>
-                        <p className="text-sm text-gray-600 mt-1">{campaign.brand}</p>
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-2xl font-bold text-green-600">
+                  {campaigns.filter(c => c.status === 'active').length}
+                </div>
+                <p className="text-sm text-gray-600">Active Campaigns</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-2xl font-bold text-purple-600">{totalApplications}</div>
+                <p className="text-sm text-gray-600">Total Applications</p>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-6">
+                <div className="text-2xl font-bold text-orange-600">{totalVideos}</div>
+                <p className="text-sm text-gray-600">Videos Submitted</p>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="approvals">
+          <AdvertiserApprovalList />
+        </TabsContent>
+
+        <TabsContent value="campaigns" className="space-y-8">
+          {/* Campaigns List */}
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Your Campaigns</h2>
+            {campaigns.length === 0 ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <p className="text-gray-600 mb-4">No campaigns created yet.</p>
+                  <Button onClick={() => setShowCreateCampaign(true)}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Campaign
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {campaigns.map((campaign) => (
+                  <Card key={campaign.id}>
+                    <CardHeader>
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{campaign.title}</CardTitle>
+                          <p className="text-sm text-gray-600 mt-1">{campaign.brand}</p>
+                        </div>
+                        <Badge className={getStatusColor(campaign.status)}>
+                          {campaign.status}
+                        </Badge>
                       </div>
-                      <Badge className={getStatusColor(campaign.status)}>
-                        {campaign.status}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-700 mb-4">{campaign.description}</p>
-                    <div className="grid md:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <span className="text-sm text-gray-600">Budget:</span>
-                        <p className="font-medium">{campaign.budget || 'Not specified'}</p>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-gray-700 mb-4">{campaign.description}</p>
+                      <div className="grid md:grid-cols-4 gap-4 mb-4">
+                        <div>
+                          <span className="text-sm text-gray-600">Budget:</span>
+                          <p className="font-medium">{campaign.budget || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Deadline:</span>
+                          <p className="font-medium">{campaign.deadline || 'Not specified'}</p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Applications:</span>
+                          <p className="font-medium">
+                            {applications.filter(app => app.campaign_id === campaign.id).length}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-sm text-gray-600">Videos:</span>
+                          <p className="font-medium">
+                            {videos.filter(video => video.application?.campaign?.title === campaign.title).length}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Deadline:</span>
-                        <p className="font-medium">{campaign.deadline || 'Not specified'}</p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCampaignForApps(campaign);
+                            setShowApplicationsDialog(true);
+                          }}
+                        >
+                          View Applications
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCampaignForVideos(campaign);
+                            setShowVideosDialog(true);
+                          }}
+                        >
+                          Review Videos
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedCampaignForAnalytics(campaign);
+                            setShowAnalyticsDialog(true);
+                          }}
+                        >
+                          Campaign Analytics
+                        </Button>
                       </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Applications:</span>
-                        <p className="font-medium">0</p>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600">Videos:</span>
-                        <p className="font-medium">0</p>
-                      </div>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedCampaignForApps(campaign);
-                          setShowApplicationsDialog(true);
-                        }}
-                      >
-                        View Applications
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedCampaignForVideos(campaign);
-                          setShowVideosDialog(true);
-                        }}
-                      >
-                        Review Videos
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedCampaignForAnalytics(campaign);
-                          setShowAnalyticsDialog(true);
-                        }}
-                      >
-                        Campaign Analytics
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
 
       {/* Create Campaign Dialog */}
       <Dialog open={showCreateCampaign} onOpenChange={setShowCreateCampaign}>
