@@ -112,10 +112,12 @@ const AdvertiserDashboard = ({ onBack }: AdvertiserDashboardProps) => {
       title="Advertiser Dashboard" 
       onBack={onBack}
       headerAction={
-        <Button onClick={() => setShowCreateCampaign(true)}>
-          <Plus className="w-4 h-4 mr-2" />
-          Create Campaign
-        </Button>
+        <div className="flex justify-center items-center">
+          <Button onClick={() => setShowCreateCampaign(true)}>
+            <Plus className="w-4 h-4 mr-2" />
+            Create Campaign
+          </Button>
+        </div>
       }
     >
       <div className="space-y-8">
