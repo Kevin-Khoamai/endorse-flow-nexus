@@ -139,7 +139,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
 
         {/* Centered Upload Video button */}
         {approvedApplications.length > 0 && (
-          <div className="flex justify-center mb-6 bg-yellow-100">
+          <div className="w-full justify-center mb-6 bg-yellow-100">
             <Button onClick={handleUploadVideo} variant="outline">
               Upload Video
             </Button>
