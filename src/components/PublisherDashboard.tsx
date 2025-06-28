@@ -132,15 +132,15 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     <Layout 
       title="Publisher Dashboard" 
       onBack={onBack}
-      
-    > {/* Centered Upload Video button */}
-      {approvedApplications.length > 0 && (
-      <div className="w-full justify-center mb-6 bg-yellow-100">
+      headerAction={
+        approvedApplications.length > 0 && (
+          <div className="w-full justify-center mb-6 bg-yellow-100">
         <Button onClick={handleUploadVideo} variant="outline">
           Upload Video
         </Button>
       </div>
       )}
+    > 
       <div className="space-y-8">
         {/* Transaction Status List */}
         <TransactionStatusList />
