@@ -1,6 +1,8 @@
+
 import React, { useState } from 'react';
 import Layout from './Layout';
 import CampaignCard from './CampaignCard';
+import TransactionStatusList from './TransactionStatusList';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -132,6 +134,9 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
       onBack={onBack}
     >
       <div className="space-y-8">
+        {/* Transaction Status List */}
+        <TransactionStatusList />
+
         {/* Centered Upload Video button */}
         {approvedApplications.length > 0 && (
           <div className="flex justify-center mb-6">
@@ -140,7 +145,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
             </Button>
           </div>
         )}  
-        {/* Move Upload Video button to the headerAction prop of Layout */}
+
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Campaigns</h2>
           {campaigns.length === 0 ? (
