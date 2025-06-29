@@ -38,7 +38,7 @@ const AdvertiserApprovalList = () => {
     if (result.error) {
       toast({
         title: "Error",
-        description: `Failed to ${decision} ${type}. Please try again.`,
+        description: `Failed to ${decision} ${type} ${result.error}. Please try again.`,
         variant: "destructive"
       });
       return;
