@@ -1,0 +1,93 @@
+@startuml
+' Endorse-Flow-Nexus Service Flow
+actor Publisher
+actor Advertiser
+actor SPTeam as "SP Team"
+participant FE as "Frontend (React)"
+participant Supabase as "Supabase API"
+participant DB as "PostgreSQL"
+
+== Publisher applies for campaign ==
+Publisher -> FE : Login/Sign Up
+FE -> Supabase : Auth request
+Supabase -> DB : Check/Create user
+Supabase --> FE : Auth token
+FE --> Publisher : Show dashboard
+
+Publisher -> FE : Browse campaigns
+FE -> Supabase : Fetch active campaigns
+Supabase -> DB : SELECT campaigns WHERE status='active'
+Supabase --> FE : Campaign list
+FE --> Publisher : Show campaigns
+
+Publisher -> FE : Apply for campaign
+FE -> Supabase : Insert campaign_application
+Supabase -> DB : INSERT INTO campaign_applications
+DB --> Supabase : Enforce UNIQUE(campaign_id, publisher_id)
+Supabase --> FE : Application status
+FE --> Publisher : Show application submitted
+
+== SP Team reviews application ==
+SPTeam -> FE : Login
+FE -> Supabase : Auth request
+Supabase -> DB : Check user
+Supabase --> FE : Auth token
+FE -> Supabase : Fetch pending applications
+Supabase -> DB : SELECT campaign_applications WHERE status='pending'
+Supabase --> FE : Application list
+FE --> SPTeam : Show applications
+SPTeam -> FE : Approve/Reject application
+FE -> Supabase : Update application status
+Supabase -> DB : UPDATE campaign_applications SET status
+DB -> Supabase : Trigger notification (if status changes)
+Supabase -> DB : INSERT INTO notifications
+Supabase --> FE : Update result
+FE --> SPTeam : Show result
+
+== Advertiser reviews application ==
+Advertiser -> FE : Login
+FE -> Supabase : Auth request
+Supabase -> DB : Check user
+Supabase --> FE : Auth token
+FE -> Supabase : Fetch SP-approved applications
+Supabase -> DB : SELECT campaign_applications WHERE status='sp_approved'
+Supabase --> FE : Application list
+FE --> Advertiser : Show applications
+Advertiser -> FE : Approve/Reject application
+FE -> Supabase : Update application status
+Supabase -> DB : UPDATE campaign_applications SET status
+DB -> Supabase : Trigger notification (if status changes)
+Supabase -> DB : INSERT INTO notifications
+Supabase --> FE : Update result
+FE --> Advertiser : Show result
+
+== Publisher uploads video after approval ==
+Publisher -> FE : Upload video
+FE -> Supabase : Insert video
+Supabase -> DB : INSERT INTO videos
+Supabase --> FE : Video status
+FE --> Publisher : Show upload result
+
+== SP Team and Advertiser review video ==
+SPTeam -> FE : Review video
+FE -> Supabase : Update video status
+Supabase -> DB : UPDATE videos SET status
+DB -> Supabase : Trigger notification (if status changes)
+Supabase -> DB : INSERT INTO notifications
+Supabase --> FE : Update result
+FE --> SPTeam : Show result
+
+Advertiser -> FE : Review video
+FE -> Supabase : Update video status
+Supabase -> DB : UPDATE videos SET status
+DB -> Supabase : Trigger notification (if status changes)
+Supabase -> DB : INSERT INTO notifications
+Supabase --> FE : Update result
+FE --> Advertiser : Show result
+
+== Notifications ==
+Supabase -> FE : Realtime notification (websocket/subscription)
+FE --> Publisher : Show notification
+FE --> SPTeam : Show notification
+FE --> Advertiser : Show notification
+@enduml 

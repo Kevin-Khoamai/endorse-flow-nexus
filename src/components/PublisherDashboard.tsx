@@ -158,7 +158,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {campaigns.map((campaign) => {
                 // Find if publisher already applied and got approval for this campaign
-                const isAppliedAndApproved = applications.some(app => app.campaign_id === campaign.id && app.status === 'sp_approved');
+                const isAppliedAndApproved = applications.some(app => app.campaign_id === campaign.id && (app.status === 'sp_approved' || app.status === 'advertiser_approved'))
                 return (
                   <CampaignCard
                     key={campaign.id}
@@ -244,7 +244,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
             </div>
             <div className="flex gap-2 pt-4">
               <Button onClick={handleSubmitApplication} disabled={
-                applications.some(app => app.campaign_id === selectedCampaign?.id && app.status === 'sp_approved')
+                applications.some(app => app.campaign_id === selectedCampaign?.id && (app.status === 'sp_approved' || app.status === 'advertiser_approved'))
               }>
                 Submit Application
               </Button>

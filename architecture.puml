@@ -1,0 +1,42 @@
+@startuml
+!define RECTANGLE class
+' Title
+header
+Endorse-Flow-Nexus Source Architecture Diagram
+endheader
+
+RECTANGLE FrontEnd {
+  React (Vite, Tailwind)
+  Pages & Components
+  Custom Hooks (useApplications, useVideos, useNotifications)
+}
+
+RECTANGLE Supabase {
+  Auth (Supabase Auth)
+  Client SDK (supabase-js)
+  Row Level Security (RLS)
+}
+
+RECTANGLE Database {
+  PostgreSQL
+  profiles
+  campaigns
+  campaign_applications
+  videos
+}
+
+FrontEnd -right-> Supabase : API calls (RESTful, Realtime)
+FrontEnd -down-> Supabase : Auth actions
+Supabase -right-> Database : SQL queries
+Supabase -down-> Database : Enforce RLS
+
+Database::campaign_applications -[hidden]-> Database::campaigns
+Database::campaign_applications -[hidden]-> Database::profiles
+Database::videos -[hidden]-> Database::campaign_applications
+
+' Show FK relationships
+Database::campaign_applications --> Database::campaigns : campaign_id
+Database::campaign_applications --> Database::profiles : publisher_id
+Database::videos --> Database::campaign_applications : application_id
+
+@enduml 
