@@ -1,14 +1,15 @@
-
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useApplications } from '@/hooks/useApplications';
 import { useVideos } from '@/hooks/useVideos';
+import { useNotifications } from '@/hooks/useNotifications';
 
 const TransactionStatusList = () => {
   const { applications, loading: applicationsLoading } = useApplications();
   const { videos, loading: videosLoading } = useVideos();
+  const { notifications } = useNotifications();
 
   const getStatusBadgeColor = (status: string) => {
     switch (status) {
@@ -60,29 +61,41 @@ const TransactionStatusList = () => {
                     <TableHead>Brand</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Applied Date</TableHead>
+                    <TableHead>Rejection Message</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {applications.map((application) => (
-                    <TableRow key={application.id}>
-                      <TableCell className="font-medium">
-                        {application.campaign?.title || 'N/A'}
-                      </TableCell>
-                      <TableCell>{application.campaign?.brand || 'N/A'}</TableCell>
-                      <TableCell>
-                        <Badge className={getStatusBadgeColor(application.status)}>
-                          {formatStatus(application.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {new Date(application.created_at).toLocaleDateString()}
-                      </TableCell>
-                    </TableRow>
-                  ))}
+                  {applications.map((application) => {
+                    // Find error notification for this application
+                    const rejectionNotification = notifications.find(
+                      n => n.related_id === application.id && n.type === 'error'
+                    );
+                    return (
+                      <TableRow key={application.id}>
+                        <TableCell className="font-medium">
+                          {application.campaign?.title || 'N/A'}
+                        </TableCell>
+                        <TableCell>{application.campaign?.brand || 'N/A'}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusBadgeColor(application.status)}>
+                            {formatStatus(application.status)}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(application.created_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          {rejectionNotification ? rejectionNotification.message : '-'}
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })}
                 </TableBody>
               </Table>
             )}
           </div>
+
+      
 
           {/* Video Submissions */}
           <div>

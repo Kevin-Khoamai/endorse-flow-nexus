@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -29,6 +28,7 @@ export const useApplications = () => {
   const { userProfile } = useAuth();
   const [applications, setApplications] = useState<CampaignApplication[]>([]);
   const [loading, setLoading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
 
   const fetchApplications = async () => {
     if (!userProfile) return;
@@ -63,6 +63,28 @@ export const useApplications = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const fetchNotifications = async () => {
+    if (!userProfile) return;
+
+    const { data, error } = await supabase
+      .from('notifications')
+      .select('*')
+      .eq('user_id', userProfile.id) // or whatever field links to the user
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching notifications:', error);
+      return [];
+    }
+    return data || [];
+  };
+
+  const fetchApplicationsAndNotifications = async () => {
+    await fetchApplications();
+    const notifications = await fetchNotifications();
+    setNotifications(notifications);
   };
 
   const createApplication = async (campaignData: {
@@ -150,7 +172,7 @@ export const useApplications = () => {
 
   useEffect(() => {
     if (userProfile) {
-      fetchApplications();
+      fetchApplicationsAndNotifications();
     }
   }, [userProfile]);
 
@@ -159,6 +181,7 @@ export const useApplications = () => {
     loading,
     createApplication,
     updateApplicationStatus,
-    refetch: fetchApplications
+    refetch: fetchApplicationsAndNotifications,
+    notifications
   };
 };
