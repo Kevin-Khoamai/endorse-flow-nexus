@@ -131,33 +131,11 @@ export const useApplications = () => {
         return { error: updateError };
       }
 
-      // Then fetch the updated record with relations
-      const { data, error: fetchError } = await supabase
-        .from('campaign_applications')
-        .select(`
-          *,
-          campaign:campaigns(title, brand),
-          publisher:profiles!campaign_applications_publisher_id_fkey(full_name, email)
-        `)
-        .eq('id', applicationId)
-        .single();
+      // Refresh the entire applications list to get updated data
+      await fetchApplications();
 
-      if (fetchError) {
-        console.error('Error fetching updated application:', fetchError);
-        // Update local state with basic data even if fetch fails
-        setApplications(prev => 
-          prev.map(app => app.id === applicationId ? { ...app, ...updateData } : app)
-        );
-        return { data: null, error: null }; // Don't return error since update succeeded
-      }
-
-      // Update local state with complete data
-      setApplications(prev => 
-        prev.map(app => app.id === applicationId ? { ...app, ...data } : app)
-      );
-
-      console.log('Application updated successfully:', data);
-      return { data, error: null };
+      console.log('Application updated successfully and list refreshed');
+      return { data: null, error: null };
     } catch (error) {
       console.error('Error updating application:', error);
       return { error };

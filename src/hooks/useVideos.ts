@@ -133,35 +133,11 @@ export const useVideos = () => {
         return { error: updateError };
       }
 
-      // Then fetch the updated record with relations
-      const { data, error: fetchError } = await supabase
-        .from('videos')
-        .select(`
-          *,
-          application:campaign_applications(
-            campaign:campaigns(title, brand),
-            publisher:profiles!campaign_applications_publisher_id_fkey(full_name, email)
-          )
-        `)
-        .eq('id', videoId)
-        .single();
+      // Refresh the entire videos list to get updated data
+      await fetchVideos();
 
-      if (fetchError) {
-        console.error('Error fetching updated video:', fetchError);
-        // Update local state with basic data even if fetch fails
-        setVideos(prev => 
-          prev.map(video => video.id === videoId ? { ...video, ...updateData } : video)
-        );
-        return { data: null, error: null }; // Don't return error since update succeeded
-      }
-
-      // Update local state with complete data
-      setVideos(prev => 
-        prev.map(video => video.id === videoId ? { ...video, ...data } : video)
-      );
-
-      console.log('Video updated successfully:', data);
-      return { data, error: null };
+      console.log('Video updated successfully and list refreshed');
+      return { data: null, error: null };
     } catch (error) {
       console.error('Error updating video:', error);
       return { error };
