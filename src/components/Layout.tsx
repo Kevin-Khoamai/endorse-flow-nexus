@@ -57,7 +57,7 @@ const Layout = ({ children, title, onBack, headerAction }: LayoutProps) => {
                   </span>
                   {userProfile.role === 'publisher' && <NotificationDropdown />}
                   <Button variant="outline" onClick={handleSignOut}>
-                    Sign Out
+                    AASign Out
                   </Button>
                 </>
               )}
