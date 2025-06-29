@@ -53,9 +53,7 @@ const Index = () => {
       return (
         <div>
           <div className="absolute top-4 right-4">
-            <Button variant="outline" onClick={handleSignOut}>
-              Sign Out1
-            </Button>
+
           </div>
           <PublisherDashboard onBack={handleBack} />
         </div>
