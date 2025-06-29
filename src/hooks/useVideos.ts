@@ -110,28 +110,36 @@ export const useVideos = () => {
     if (!userProfile) return { error: 'User not authenticated' };
 
     try {
-      console.log('Updating video:', videoId, 'to status:', status);
+      console.log('Updating video status:', { videoId, status, userId: userProfile.id });
       
-      const updateData: any = { status };
+      const currentTime = new Date().toISOString();
+      const updateData: any = {
+        status: status
+      };
 
-      if (status.startsWith('sp_')) {
+      // Set the appropriate reviewer fields based on status
+      if (status === 'sp_approved' || status === 'sp_rejected') {
         updateData.sp_reviewed_by = userProfile.id;
-        updateData.sp_reviewed_at = new Date().toISOString();
-      } else if (status.startsWith('advertiser_')) {
+        updateData.sp_reviewed_at = currentTime;
+      } else if (status === 'advertiser_approved' || status === 'advertiser_rejected') {
         updateData.advertiser_reviewed_by = userProfile.id;
-        updateData.advertiser_reviewed_at = new Date().toISOString();
+        updateData.advertiser_reviewed_at = currentTime;
       }
 
-      // First, update the record
+      console.log('Update data being sent:', updateData);
+
+      // Update the record in the database
       const { error: updateError } = await supabase
         .from('videos')
         .update(updateData)
         .eq('id', videoId);
 
       if (updateError) {
-        console.error('Error updating video:', updateError);
+        console.error('Error updating video status:', updateError);
         return { error: updateError };
       }
+
+      console.log('Database update successful, refreshing videos list...');
 
       // Refresh the entire videos list to get updated data
       await fetchVideos();
