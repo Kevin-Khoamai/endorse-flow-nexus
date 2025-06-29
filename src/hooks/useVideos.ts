@@ -110,6 +110,8 @@ export const useVideos = () => {
     if (!userProfile) return { error: 'User not authenticated' };
 
     try {
+      console.log('Updating video:', videoId, 'to status:', status);
+      
       const updateData: any = { status };
 
       if (status.startsWith('sp_')) {
@@ -120,11 +122,20 @@ export const useVideos = () => {
         updateData.advertiser_reviewed_at = new Date().toISOString();
       }
 
-      // Update directly by video ID without any additional filtering
-      const { data, error } = await supabase
+      // First, update the record
+      const { error: updateError } = await supabase
         .from('videos')
         .update(updateData)
-        .eq('id', videoId)
+        .eq('id', videoId);
+
+      if (updateError) {
+        console.error('Error updating video:', updateError);
+        return { error: updateError };
+      }
+
+      // Then fetch the updated record with relations
+      const { data, error: fetchError } = await supabase
+        .from('videos')
         .select(`
           *,
           application:campaign_applications(
@@ -132,17 +143,24 @@ export const useVideos = () => {
             publisher:profiles!campaign_applications_publisher_id_fkey(full_name, email)
           )
         `)
+        .eq('id', videoId)
         .single();
 
-      if (error) {
-        console.error('Error updating video:', error);
-        return { error };
+      if (fetchError) {
+        console.error('Error fetching updated video:', fetchError);
+        // Update local state with basic data even if fetch fails
+        setVideos(prev => 
+          prev.map(video => video.id === videoId ? { ...video, ...updateData } : video)
+        );
+        return { data: null, error: null }; // Don't return error since update succeeded
       }
 
+      // Update local state with complete data
       setVideos(prev => 
         prev.map(video => video.id === videoId ? { ...video, ...data } : video)
       );
 
+      console.log('Video updated successfully:', data);
       return { data, error: null };
     } catch (error) {
       console.error('Error updating video:', error);

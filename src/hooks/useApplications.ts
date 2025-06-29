@@ -105,6 +105,8 @@ export const useApplications = () => {
     if (!userProfile) return { error: 'User not authenticated' };
 
     try {
+      console.log('Updating application:', applicationId, 'to status:', status);
+      
       const updateData: any = {
         status,
         updated_at: new Date().toISOString()
@@ -118,27 +120,43 @@ export const useApplications = () => {
         updateData.advertiser_reviewed_at = new Date().toISOString();
       }
 
-      // Update directly by application ID without any additional filtering
-      const { data, error } = await supabase
+      // First, update the record
+      const { error: updateError } = await supabase
         .from('campaign_applications')
         .update(updateData)
-        .eq('id', applicationId)
+        .eq('id', applicationId);
+
+      if (updateError) {
+        console.error('Error updating application:', updateError);
+        return { error: updateError };
+      }
+
+      // Then fetch the updated record with relations
+      const { data, error: fetchError } = await supabase
+        .from('campaign_applications')
         .select(`
           *,
           campaign:campaigns(title, brand),
           publisher:profiles!campaign_applications_publisher_id_fkey(full_name, email)
         `)
+        .eq('id', applicationId)
         .single();
 
-      if (error) {
-        console.error('Error updating application:', error);
-        return { error };
+      if (fetchError) {
+        console.error('Error fetching updated application:', fetchError);
+        // Update local state with basic data even if fetch fails
+        setApplications(prev => 
+          prev.map(app => app.id === applicationId ? { ...app, ...updateData } : app)
+        );
+        return { data: null, error: null }; // Don't return error since update succeeded
       }
 
+      // Update local state with complete data
       setApplications(prev => 
         prev.map(app => app.id === applicationId ? { ...app, ...data } : app)
       );
 
+      console.log('Application updated successfully:', data);
       return { data, error: null };
     } catch (error) {
       console.error('Error updating application:', error);
