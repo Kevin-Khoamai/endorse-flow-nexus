@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +27,11 @@ const AdvertiserApprovalList = () => {
       ? 'advertiser_approved' 
       : 'advertiser_rejected';
 
+    // Show popup for debugging
+    /* alert(`About to update: applicationId=${item.id}, status=${status}`);
+    console.log('Query: update campaign_applications set status =', status, 'where id =', item.id);
+    */
+   
     let result;
     if (type === 'application') {
       result = await updateApplicationStatus(item.id, status as any);
