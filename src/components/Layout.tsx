@@ -5,7 +5,14 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import NotificationDropdown from './NotificationDropdown';
 
-const Layout = ({ children }: { children: React.ReactNode }) => {
+interface LayoutProps {
+  children: React.ReactNode;
+  title?: string;
+  onBack?: () => void;
+  headerAction?: React.ReactNode;
+}
+
+const Layout = ({ children, title, onBack, headerAction }: LayoutProps) => {
   const { userProfile, loading } = useAuth();
 
   const handleSignOut = async () => {
@@ -26,8 +33,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
+              {onBack && (
+                <Button variant="ghost" onClick={onBack} className="mr-4">
+                  ← Back
+                </Button>
+              )}
               <h1 className="text-xl font-semibold text-gray-900">
-                Campaign Platform
+                {title || 'Campaign Platform'}
               </h1>
               {userProfile && (
                 <div className="ml-4 px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
@@ -53,6 +65,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
       </header>
+      
+      {headerAction && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          {headerAction}
+        </div>
+      )}
       
       <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         {children}

@@ -35,8 +35,14 @@ export const useNotifications = () => {
         return;
       }
 
-      setNotifications(data || []);
-      setUnreadCount(data?.filter(n => !n.read).length || 0);
+      // Cast the data to ensure type compatibility
+      const typedNotifications = (data || []).map(notification => ({
+        ...notification,
+        type: notification.type as 'success' | 'error' | 'warning' | 'info'
+      }));
+
+      setNotifications(typedNotifications);
+      setUnreadCount(typedNotifications.filter(n => !n.read).length);
     } catch (error) {
       console.error('Error fetching notifications:', error);
     } finally {
@@ -117,7 +123,10 @@ export const useNotifications = () => {
         },
         (payload) => {
           console.log('New notification received:', payload);
-          const newNotification = payload.new as Notification;
+          const newNotification = {
+            ...payload.new,
+            type: payload.new.type as 'success' | 'error' | 'warning' | 'info'
+          } as Notification;
           setNotifications(prev => [newNotification, ...prev]);
           setUnreadCount(prev => prev + 1);
         }
