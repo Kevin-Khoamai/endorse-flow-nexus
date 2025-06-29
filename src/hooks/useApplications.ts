@@ -118,11 +118,16 @@ export const useApplications = () => {
         updateData.advertiser_reviewed_at = new Date().toISOString();
       }
 
+      // Update directly by application ID without any additional filtering
       const { data, error } = await supabase
         .from('campaign_applications')
         .update(updateData)
         .eq('id', applicationId)
-        .select()
+        .select(`
+          *,
+          campaign:campaigns(title, brand),
+          publisher:profiles!campaign_applications_publisher_id_fkey(full_name, email)
+        `)
         .single();
 
       if (error) {

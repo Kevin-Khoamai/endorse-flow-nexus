@@ -120,11 +120,18 @@ export const useVideos = () => {
         updateData.advertiser_reviewed_at = new Date().toISOString();
       }
 
+      // Update directly by video ID without any additional filtering
       const { data, error } = await supabase
         .from('videos')
         .update(updateData)
         .eq('id', videoId)
-        .select()
+        .select(`
+          *,
+          application:campaign_applications(
+            campaign:campaigns(title, brand),
+            publisher:profiles!campaign_applications_publisher_id_fkey(full_name, email)
+          )
+        `)
         .single();
 
       if (error) {
