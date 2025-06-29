@@ -38,7 +38,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
   });
 
   // Get approved applications for video upload
-  const approvedApplications = applications.filter(app => app.status === 'sp_approved');
+  const approvedApplications = applications.filter(app => app.status === 'sp_approved' || app.status === 'advertiser_approved');
 
   const handleViewDetails = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
@@ -83,6 +83,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
   };
 
   const handleSubmitVideo = async () => {
+    
     if (!selectedApplicationId || !videoData.title || !videoData.url) {
       toast({
         title: "Missing Information",
@@ -134,13 +135,14 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
       onBack={onBack}
       headerAction={
         approvedApplications.length > 0 && (
-          <div className="w-full justify-center mb-6 flex items-center">
-        <Button onClick={handleUploadVideo} variant="outline">
-          Upload Video
-        </Button>
-      </div>
+          <div className="w-full justify-start mb-6 flex items-center">
+              <Button onClick={handleUploadVideo} variant="outline">
+               Upload Video
+              </Button>
+          </div>
       )}
     > 
+      
       <div className="space-y-8">
         {/* Transaction Status List */}
         <TransactionStatusList />
@@ -158,7 +160,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {campaigns.map((campaign) => {
                 // Find if publisher already applied and got approval for this campaign
-                const isAppliedAndApproved = applications.some(app => app.campaign_id === campaign.id && (app.status === 'sp_approved' || app.status === 'advertiser_approved'))
+                const isAppliedAndApproved = applications.some(app => app.campaign_id === campaign.id && (app.status === 'sp_approved' || app.status === 'advertiser_approved' || app.status === 'pending'))
                 return (
                   <CampaignCard
                     key={campaign.id}
@@ -265,16 +267,20 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">Select Campaign</label>
-              <Select value={selectedApplicationId} onValueChange={setSelectedApplicationId}>
+              <Select value={selectedApplicationId} onValueChange={setSelectedApplicationId} disabled={approvedApplications.length === 0}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Choose an approved campaign..." />
+                  <SelectValue placeholder={approvedApplications.length === 0 ? "No approved campaigns available" : "Choose an approved campaign..."} />
                 </SelectTrigger>
                 <SelectContent>
-                  {approvedApplications.map((app) => (
-                    <SelectItem key={app.id} value={app.id}>
-                      {app.campaign?.title} - {app.campaign?.brand}
-                    </SelectItem>
-                  ))}
+                  {approvedApplications.length === 0 ? (
+                    <div className="px-4 py-2 text-gray-500 text-sm">No approved campaigns available</div>
+                  ) : (
+                    approvedApplications.map((app) => (
+                      <SelectItem key={app.id} value={app.id}>
+                        {app.campaign?.title} - {app.campaign?.brand}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
