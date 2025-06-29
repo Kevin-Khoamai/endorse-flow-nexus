@@ -100,46 +100,48 @@ export const useApplications = () => {
 
   const updateApplicationStatus = async (
     applicationId: string, 
-    status: 'sp_approved' | 'sp_rejected' | 'advertiser_approved' | 'advertiser_rejected' 
+    status: 'sp_approved' | 'sp_rejected' | 'advertiser_approved' | 'advertiser_rejected'
   ) => {
     if (!userProfile) return { error: 'User not authenticated' };
 
     try {
+      console.log('Updating application status:', { applicationId, status, userId: userProfile.id });
+      
+      const currentTime = new Date().toISOString();
       const updateData: any = {
-        status,
-        updated_at: new Date().toISOString()
+        status: status,
+        updated_at: currentTime
       };
 
-      if (status.startsWith('sp_')) {
+      // Set the appropriate reviewer fields based on status
+      if (status === 'sp_approved' || status === 'sp_rejected') {
         updateData.sp_reviewed_by = userProfile.id;
-        updateData.sp_reviewed_at = new Date().toISOString();
-      } else if (status.startsWith('advertiser_')) {
+        updateData.sp_reviewed_at = currentTime;
+      } else if (status === 'advertiser_approved' || status === 'advertiser_rejected') {
         updateData.advertiser_reviewed_by = userProfile.id;
-        updateData.advertiser_reviewed_at = new Date().toISOString();
+        updateData.advertiser_reviewed_at = currentTime;
       }
 
-      // Update directly by application ID without any additional filtering
-      const { data, error } = await supabase
+      console.log('Update data being sent:', updateData);
+
+      // Update the record in the database
+      const { error: updateError } = await supabase
         .from('campaign_applications')
         .update(updateData)
-        .eq('id', applicationId)
-        .select(`
-          *,
-          campaign:campaigns(title, brand),
-          publisher:profiles!campaign_applications_publisher_id_fkey(full_name, email)
-        `)
-        .single();
+        .eq('id', applicationId);
 
-      if (error) {
-        console.error('Error updating application:', error);
-        return { error };
+      if (updateError) {
+        console.error('Error updating application status:', updateError);
+        return { error: updateError };
       }
 
-      setApplications(prev => 
-        prev.map(app => app.id === applicationId ? { ...app, ...data } : app)
-      );
+      console.log('Database update successful, refreshing applications list...');
 
-      return { data, error: null };
+      // Refresh the entire applications list to get updated data
+      await fetchApplications();
+
+      console.log('Application updated successfully and list refreshed');
+      return { data: null, error: null };
     } catch (error) {
       console.error('Error updating application:', error);
       return { error };
