@@ -46,7 +46,7 @@ const AdvertiserApprovalList = () => {
 
     toast({
       title: `${type.charAt(0).toUpperCase() + type.slice(1)} ${decision === 'approve' ? 'Approved' : 'Rejected'}`,
-      description: `The ${type} has been ${decision}d successfully.`,
+      description: `The ${type} has been ${decision}d successfully. The publisher will be notified automatically.`,
     });
 
     setShowApprovalDialog(false);
@@ -85,11 +85,16 @@ const AdvertiserApprovalList = () => {
           <CardTitle className="flex items-center gap-2">
             <Clock className="w-5 h-5" />
             Pending Your Approval
+            {(spApprovedApplications.length + spApprovedVideos.length > 0) && (
+              <Badge variant="destructive" className="ml-2">
+                {spApprovedApplications.length + spApprovedVideos.length} pending
+              </Badge>
+            )}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="text-sm text-gray-600 mb-4">
-            Items approved by SP Team awaiting your final approval
+            Items approved by SP Team awaiting your final approval. Publishers will receive automatic notifications when you approve or reject items.
           </div>
           
           {spApprovedApplications.length === 0 && spApprovedVideos.length === 0 ? (
@@ -140,7 +145,7 @@ const AdvertiserApprovalList = () => {
                       className="bg-green-600 hover:bg-green-700"
                     >
                       <CheckCircle className="w-4 h-4 mr-1" />
-                      Approve
+                      Approve & Notify
                     </Button>
                     <Button 
                       size="sm" 
@@ -149,7 +154,7 @@ const AdvertiserApprovalList = () => {
                       className="border-red-300 text-red-600 hover:bg-red-50"
                     >
                       <XCircle className="w-4 h-4 mr-1" />
-                      Reject
+                      Reject & Notify
                     </Button>
                   </div>
                 </div>
@@ -210,7 +215,7 @@ const AdvertiserApprovalList = () => {
                       className="bg-green-600 hover:bg-green-700"
                     >
                       <CheckCircle className="w-4 h-4 mr-1" />
-                      Approve
+                      Approve & Notify
                     </Button>
                     <Button 
                       size="sm" 
@@ -219,7 +224,7 @@ const AdvertiserApprovalList = () => {
                       className="border-red-300 text-red-600 hover:bg-red-50"
                     >
                       <XCircle className="w-4 h-4 mr-1" />
-                      Reject
+                      Reject & Notify
                     </Button>
                   </div>
                 </div>
@@ -247,13 +252,16 @@ const AdvertiserApprovalList = () => {
                 value={rejectionReason}
                 onChange={(e) => setRejectionReason(e.target.value)}
               />
+              <p className="text-xs text-gray-500 mt-1">
+                The publisher will receive an automatic notification about this rejection.
+              </p>
             </div>
             <div className="flex gap-2">
               <Button 
                 onClick={() => handleApproval(selectedItem, approvalType, 'reject')}
                 variant="destructive"
               >
-                Confirm Rejection
+                Confirm Rejection & Notify
               </Button>
               <Button 
                 variant="outline" 
