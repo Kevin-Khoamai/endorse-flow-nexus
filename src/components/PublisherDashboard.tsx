@@ -6,6 +6,10 @@ import CampaignDetailsDialog from './CampaignDetailsDialog';
 import ApplicationDialog from './ApplicationDialog';
 import VideoUploadDialog from './VideoUploadDialog';
 import CampaignGrid from './CampaignGrid';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Clock, CheckCircle, XCircle, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaigns, Campaign } from '@/hooks/useCampaigns';
 import { useApplications } from '@/hooks/useApplications';
@@ -19,7 +23,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
   const { toast } = useToast();
   const { campaigns, loading } = useCampaigns();
   const { applications, createApplication } = useApplications();
-  const { createVideo } = useVideos();
+  const { videos, createVideo } = useVideos();
   
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
   const [showCampaignDetails, setShowCampaignDetails] = useState(false);
@@ -114,6 +118,41 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     setSelectedApplicationId('');
   };
 
+  const getVideoStatusColor = (status: string) => {
+    switch (status) {
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'sp_approved': return 'bg-blue-100 text-blue-800';
+      case 'sp_rejected': return 'bg-red-100 text-red-800';
+      case 'advertiser_approved': return 'bg-green-100 text-green-800';
+      case 'advertiser_rejected': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getVideoStatusIcon = (status: string) => {
+    switch (status) {
+      case 'pending': 
+      case 'sp_approved': 
+        return <Clock className="w-4 h-4" />;
+      case 'advertiser_approved': return <CheckCircle className="w-4 h-4 text-green-600" />;
+      case 'sp_rejected': 
+      case 'advertiser_rejected': 
+        return <XCircle className="w-4 h-4 text-red-600" />;
+      default: return <Clock className="w-4 h-4" />;
+    }
+  };
+
+  const formatVideoStatus = (status: string) => {
+    switch (status) {
+      case 'pending': return 'Pending SP Review';
+      case 'sp_approved': return 'SP Approved - Pending Advertiser';
+      case 'sp_rejected': return 'SP Rejected';
+      case 'advertiser_approved': return 'Approved';
+      case 'advertiser_rejected': return 'Advertiser Rejected';
+      default: return status;
+    }
+  };
+
   if (loading) {
     return (
       <Layout title="Publisher Dashboard" onBack={onBack}>
@@ -130,6 +169,70 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     <Layout title="Publisher Dashboard" onBack={onBack}> 
       <div className="space-y-8">
         <TransactionStatusListWithUpload onUploadVideo={handleUploadVideo} />
+
+        {/* Video Submissions Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Video className="w-5 h-5" />
+              Video Submissions
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {videos.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">
+                No videos uploaded yet. Upload your first video using the buttons above!
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Video Title</TableHead>
+                      <TableHead>Campaign</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Uploaded Date</TableHead>
+                      <TableHead>Video URL</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {videos.map((video) => (
+                      <TableRow key={video.id}>
+                        <TableCell className="font-medium">
+                          {video.title}
+                        </TableCell>
+                        <TableCell>
+                          {video.application?.campaign?.title || 'Unknown Campaign'} - {video.application?.campaign?.brand || 'Unknown Brand'}
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getVideoStatusColor(video.status)}>
+                              {formatVideoStatus(video.status)}
+                            </Badge>
+                            {getVideoStatusIcon(video.status)}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {new Date(video.uploaded_at).toLocaleDateString()}
+                        </TableCell>
+                        <TableCell>
+                          <a 
+                            href={video.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:underline"
+                          >
+                            View Video
+                          </a>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Campaigns</h2>
