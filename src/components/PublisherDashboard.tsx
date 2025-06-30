@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Layout from './Layout';
 import CampaignCard from './CampaignCard';
-import TransactionStatusList from './TransactionStatusList';
+import TransactionStatusListWithUpload from './TransactionStatusListWithUpload';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -78,12 +78,12 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     setSelectedCampaign(null);
   };
 
-  const handleUploadVideo = () => {
+  const handleUploadVideo = (applicationId: string) => {
+    setSelectedApplicationId(applicationId);
     setShowVideoUploadDialog(true);
   };
 
   const handleSubmitVideo = async () => {
-    
     if (!selectedApplicationId || !videoData.title || !videoData.url) {
       toast({
         title: "Missing Information",
@@ -130,24 +130,10 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
   }
 
   return (
-    <Layout 
-      title="Publisher Dashboard" 
-      onBack={onBack}
-      headerAction={
-        approvedApplications.length > 0 && (
-          <div className="w-full justify-start mb-6 flex items-center">
-              <Button onClick={handleUploadVideo} variant="outline">
-               Upload Video
-              </Button>
-          </div>
-      )}
-    > 
-      
+    <Layout title="Publisher Dashboard" onBack={onBack}> 
       <div className="space-y-8">
-        {/* Transaction Status List */}
-        <TransactionStatusList />
-
-         
+        {/* Transaction Status List with Upload Buttons */}
+        <TransactionStatusListWithUpload onUploadVideo={handleUploadVideo} />
 
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Campaigns</h2>
@@ -265,25 +251,13 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
             <DialogTitle>Upload Video</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Select Campaign</label>
-              <Select value={selectedApplicationId} onValueChange={setSelectedApplicationId} disabled={approvedApplications.length === 0}>
-                <SelectTrigger>
-                  <SelectValue placeholder={approvedApplications.length === 0 ? "No approved campaigns available" : "Choose an approved campaign..."} />
-                </SelectTrigger>
-                <SelectContent>
-                  {approvedApplications.length === 0 ? (
-                    <div className="px-4 py-2 text-gray-500 text-sm">No approved campaigns available</div>
-                  ) : (
-                    approvedApplications.map((app) => (
-                      <SelectItem key={app.id} value={app.id}>
-                        {app.campaign?.title} - {app.campaign?.brand}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+            {selectedApplicationId && (
+              <div className="bg-blue-50 p-3 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Campaign:</strong> {applications.find(app => app.id === selectedApplicationId)?.campaign?.title} - {applications.find(app => app.id === selectedApplicationId)?.campaign?.brand}
+                </p>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium mb-2">Video Title</label>
               <Input
@@ -308,7 +282,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
                 onChange={(e) => setVideoData({...videoData, description: e.target.value})}
               />
             </div>
-            <div className="flex justify-center mb-6" >
+            <div className="flex gap-2 pt-4">
               <Button onClick={handleSubmitVideo}>Upload Video</Button>
               <Button variant="outline" onClick={() => setShowVideoUploadDialog(false)}>
                 Cancel
