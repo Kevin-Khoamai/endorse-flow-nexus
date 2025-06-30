@@ -50,7 +50,7 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await signUp(signUpData.email, signUpData.password, signUpData.fullName);
+    const { error } = await signUp(signUpData.email, signUpData.password, signUpData.fullName, signUpData.role);
     
     if (error) {
       toast({
