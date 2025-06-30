@@ -1,13 +1,11 @@
 
 import React, { useState } from 'react';
 import Layout from './Layout';
-import CampaignCard from './CampaignCard';
 import TransactionStatusListWithUpload from './TransactionStatusListWithUpload';
-import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import CampaignDetailsDialog from './CampaignDetailsDialog';
+import ApplicationDialog from './ApplicationDialog';
+import VideoUploadDialog from './VideoUploadDialog';
+import CampaignGrid from './CampaignGrid';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaigns, Campaign } from '@/hooks/useCampaigns';
 import { useApplications } from '@/hooks/useApplications';
@@ -22,34 +20,29 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
   const { campaigns, loading } = useCampaigns();
   const { applications, createApplication } = useApplications();
   const { createVideo } = useVideos();
+  
   const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [showCampaignDetails, setShowCampaignDetails] = useState(false);
   const [showApplicationDialog, setShowApplicationDialog] = useState(false);
   const [showVideoUploadDialog, setShowVideoUploadDialog] = useState(false);
   const [selectedApplicationId, setSelectedApplicationId] = useState<string>('');
-  const [applicationData, setApplicationData] = useState({
-    experience: '',
-    audience: '',
-    videoIdeas: ''
-  });
-  const [videoData, setVideoData] = useState({
-    title: '',
-    url: '',
-    description: ''
-  });
-
-  // Get approved applications for video upload
-  const approvedApplications = applications.filter(app => app.status === 'sp_approved' || app.status === 'advertiser_approved');
 
   const handleViewDetails = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
+    setShowCampaignDetails(true);
   };
 
   const handleApply = (campaign: Campaign) => {
     setSelectedCampaign(campaign);
     setShowApplicationDialog(true);
+    setShowCampaignDetails(false);
   };
 
-  const handleSubmitApplication = async () => {
+  const handleSubmitApplication = async (applicationData: {
+    experience: string;
+    audience: string;
+    videoIdeas: string;
+  }) => {
     if (!selectedCampaign) return;
 
     const { error } = await createApplication({
@@ -74,7 +67,6 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     });
     
     setShowApplicationDialog(false);
-    setApplicationData({ experience: '', audience: '', videoIdeas: '' });
     setSelectedCampaign(null);
   };
 
@@ -83,7 +75,11 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     setShowVideoUploadDialog(true);
   };
 
-  const handleSubmitVideo = async () => {
+  const handleSubmitVideo = async (videoData: {
+    title: string;
+    url: string;
+    description: string;
+  }) => {
     if (!selectedApplicationId || !videoData.title || !videoData.url) {
       toast({
         title: "Missing Information",
@@ -115,7 +111,6 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     });
     
     setShowVideoUploadDialog(false);
-    setVideoData({ title: '', url: '', description: '' });
     setSelectedApplicationId('');
   };
 
@@ -129,168 +124,57 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     );
   }
 
+  const selectedApplication = applications.find(app => app.id === selectedApplicationId);
+
   return (
     <Layout title="Publisher Dashboard" onBack={onBack}> 
       <div className="space-y-8">
-        {/* Transaction Status List with Upload Buttons */}
         <TransactionStatusListWithUpload onUploadVideo={handleUploadVideo} />
 
         <div>
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Available Campaigns</h2>
-          {campaigns.length === 0 ? (
-            <div className="text-center py-12">
-              <p className="text-gray-600 mb-4">No active campaigns available at the moment.</p>
-              <p className="text-sm text-gray-500">Check back later for new opportunities!</p>
-            </div>
-          ) : (
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {campaigns.map((campaign) => {
-                // Find if publisher already applied and got approval for this campaign
-                const isAppliedAndApproved = applications.some(app => app.campaign_id === campaign.id && (app.status === 'sp_approved' || app.status === 'advertiser_approved' || app.status === 'pending'))
-                return (
-                  <CampaignCard
-                    key={campaign.id}
-                    campaign={campaign}
-                    onViewDetails={handleViewDetails}
-                    onApply={handleApply}
-                    isAppliedAndApproved={isAppliedAndApproved}
-                  />
-                );
-              })}
-            </div>
-          )}
+          <CampaignGrid
+            campaigns={campaigns}
+            applications={applications}
+            onViewDetails={handleViewDetails}
+            onApply={handleApply}
+          />
         </div>
       </div>
 
-      {/* Campaign Details Dialog */}
-      <Dialog open={!!selectedCampaign && !showApplicationDialog} onOpenChange={() => setSelectedCampaign(null)}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>{selectedCampaign?.title}</DialogTitle>
-          </DialogHeader>
-          {selectedCampaign && (
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">Brand</h4>
-                <p className="text-gray-600">{selectedCampaign.brand}</p>
-              </div>
-              <div>
-                <h4 className="font-medium mb-2">Description</h4>
-                <p className="text-gray-600">{selectedCampaign.description}</p>
-              </div>
-              <div>
-                <h4 className="font-medium mb-2">Budget Range</h4>
-                <p className="text-gray-600">{selectedCampaign.budget || 'Not specified'}</p>
-              </div>
-              <div>
-                <h4 className="font-medium mb-2">Deadline</h4>
-                <p className="text-gray-600">{selectedCampaign.deadline || 'Not specified'}</p>
-              </div>
-              <div className="flex gap-2 pt-4">
-                <Button onClick={() => handleApply(selectedCampaign)}>
-                  Apply for Campaign
-                </Button>
-                <Button variant="outline" onClick={() => setSelectedCampaign(null)}>
-                  Close
-                </Button>
-              </div>
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
+      <CampaignDetailsDialog
+        campaign={selectedCampaign}
+        isOpen={showCampaignDetails}
+        onClose={() => {
+          setShowCampaignDetails(false);
+          setSelectedCampaign(null);
+        }}
+        onApply={handleApply}
+      />
 
-      {/* Application Dialog */}
-      <Dialog open={showApplicationDialog} onOpenChange={setShowApplicationDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Apply for {selectedCampaign?.title}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">Your Experience</label>
-              <Textarea
-                placeholder="Tell us about your experience with similar campaigns..."
-                value={applicationData.experience}
-                onChange={(e) => setApplicationData({...applicationData, experience: e.target.value})}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Audience Information</label>
-              <Textarea
-                placeholder="Describe your audience demographics and engagement..."
-                value={applicationData.audience}
-                onChange={(e) => setApplicationData({...applicationData, audience: e.target.value})}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Video Ideas</label>
-              <Textarea
-                placeholder="Share your creative ideas for this campaign..."
-                value={applicationData.videoIdeas}
-                onChange={(e) => setApplicationData({...applicationData, videoIdeas: e.target.value})}
-              />
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleSubmitApplication} disabled={
-                applications.some(app => app.campaign_id === selectedCampaign?.id && (app.status === 'sp_approved' || app.status === 'advertiser_approved'))
-              }>
-                Submit Application
-              </Button>
-              <Button variant="outline" onClick={() => setShowApplicationDialog(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ApplicationDialog
+        campaign={selectedCampaign}
+        isOpen={showApplicationDialog}
+        onClose={() => {
+          setShowApplicationDialog(false);
+          setSelectedCampaign(null);
+        }}
+        onSubmit={handleSubmitApplication}
+        isApplicationDisabled={applications.some(app => 
+          app.campaign_id === selectedCampaign?.id && 
+          (app.status === 'sp_approved' || app.status === 'advertiser_approved')
+        )}
+      />
 
-      {/* Video Upload Dialog */}
-      <Dialog open={showVideoUploadDialog} onOpenChange={setShowVideoUploadDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Upload Video</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {selectedApplicationId && (
-              <div className="bg-blue-50 p-3 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Campaign:</strong> {applications.find(app => app.id === selectedApplicationId)?.campaign?.title} - {applications.find(app => app.id === selectedApplicationId)?.campaign?.brand}
-                </p>
-              </div>
-            )}
-            <div>
-              <label className="block text-sm font-medium mb-2">Video Title</label>
-              <Input
-                placeholder="Enter video title..."
-                value={videoData.title}
-                onChange={(e) => setVideoData({...videoData, title: e.target.value})}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Video URL</label>
-              <Input
-                placeholder="https://youtube.com/watch?v=..."
-                value={videoData.url}
-                onChange={(e) => setVideoData({...videoData, url: e.target.value})}
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-2">Description</label>
-              <Textarea
-                placeholder="Describe your video content..."
-                value={videoData.description}
-                onChange={(e) => setVideoData({...videoData, description: e.target.value})}
-              />
-            </div>
-            <div className="flex gap-2 pt-4">
-              <Button onClick={handleSubmitVideo}>Upload Video</Button>
-              <Button variant="outline" onClick={() => setShowVideoUploadDialog(false)}>
-                Cancel
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <VideoUploadDialog
+        isOpen={showVideoUploadDialog}
+        onClose={() => {
+          setShowVideoUploadDialog(false);
+          setSelectedApplicationId('');
+        }}
+        onSubmit={handleSubmitVideo}
+        selectedApplication={selectedApplication || null}
+      />
     </Layout>
   );
 };
