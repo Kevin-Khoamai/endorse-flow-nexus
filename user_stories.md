@@ -1,24 +1,5 @@
 # Endorse-Flow-Nexus User Stories
 
-> **Note:** Every new feature or bugfix must have a corresponding GitHub Pull Request (PR) linked to a user story.
-
----
-
-## User Story Checklist
-
-- [x] Publisher: Browse campaigns, view details, apply, see status, receive notifications, upload video, see video status
-- [x] SP Team: View/review applications, approve/reject applications, view/review videos, approve/reject videos, monitor campaigns
-- [x] Advertiser: Create campaigns, view applications, approve/reject applications, review videos, approve/reject videos, see analytics
-- [x] General: Sign up, select role, sign in, dashboard access, sign out, real-time notifications
-- [x] System: Enforce one application per campaign, send notifications, RLS, responsive UI
-- [ ] Publisher: Edit/withdraw application, view feedback, track earnings, filter/search campaigns, manage profile
-- [ ] SP Team: Leave feedback, assign reviews, generate reports
-- [ ] Advertiser: Invite collaborators, schedule campaigns, export analytics, in-app messaging, auto-approve rules
-- [ ] General: Email/push notifications, mobile app, 2FA, password reset, help center, changelog/news feed
-- [ ] System: Payment integration, admin dashboard, multi-language, accessibility, API access
-
----
-
 ## User Roles
 - **Publisher**: Browses campaigns, applies for endorsements, uploads videos.
 - **SP Team**: Reviews applications, approves/rejects videos, monitors campaigns.
