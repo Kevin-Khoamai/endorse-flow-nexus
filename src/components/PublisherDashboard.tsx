@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Clock, CheckCircle, XCircle, Video } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useCampaigns, Campaign } from '@/hooks/useCampaigns';
 import { useApplications } from '@/hooks/useApplications';
@@ -153,6 +154,16 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
     }
   };
 
+  const handleUploadToTikTok = (videoId: string, videoUrl: string) => {
+    // Open TikTok upload page with the video URL
+    window.open(`https://www.tiktok.com/upload?video_url=${encodeURIComponent(videoUrl)}`, '_blank');
+    
+    toast({
+      title: "Redirecting to TikTok",
+      description: "You'll be redirected to TikTok to upload your approved video.",
+    });
+  };
+
   if (loading) {
     return (
       <Layout title="Publisher Dashboard" onBack={onBack}>
@@ -193,6 +204,7 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
                       <TableHead>Status</TableHead>
                       <TableHead>Uploaded Date</TableHead>
                       <TableHead>Video URL</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -224,6 +236,18 @@ const PublisherDashboard = ({ onBack }: PublisherDashboardProps) => {
                           >
                             View Video
                           </a>
+                        </TableCell>
+                        <TableCell>
+                          {video.status === 'advertiser_approved' && (
+                            <Button
+                              onClick={() => handleUploadToTikTok(video.id, video.url)}
+                              size="sm"
+                              variant="outline"
+                              className="flex items-center gap-1"
+                            >
+                              Upload to TikTok
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
